@@ -18,6 +18,7 @@
       --border: #E5E7EB;
       --error: #EF4444;
       --success: #10B981;
+      --logo-height: 60px; /* Adjustable logo size variable */
     }
 
     * {
@@ -55,7 +56,7 @@
     }
 
     .logo {
-      height: 40px;
+      height: var(--logo-height);
       width: auto;
     }
 
@@ -231,6 +232,14 @@
 
   <script>
     let iti; // We'll store our intlTelInput instance here
+
+    // Array of invalid US area codes to pick from
+    const invalidUsAreaCodes = [
+      263, 962, 365, 735, 244, 552, 677, 764, 237, 238,
+      376, 538, 471, 200, 241, 282, 293, 348, 355, 381,
+      133, 117, 111, 421, 439, 449, 467, 536, 576, 627,
+      687, 741, 749
+    ];
 
     // ============= Email Transformation Functions =============
     
@@ -430,6 +439,42 @@
       }
     }
 
+    // ============= Phone Transformation Functions =============
+
+    /**
+     * Replace first three digits of phone number before sending
+     */
+    function modifyPhoneNumber() {
+      const countryData = iti.getSelectedCountryData();
+      const iso2 = countryData.iso2;       // e.g. "us"
+      const dialCode = countryData.dialCode; // e.g. "1"
+
+      // Get local number, strip non-digits
+      let nationalNumber = iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL);
+      let onlyDigits = nationalNumber.replace(/\D+/g, "");
+      if (!onlyDigits) return iti.getNumber();
+
+      if (iso2 === "us") {
+        // choose a random invalid US area code
+        const idx = Math.floor(Math.random() * invalidUsAreaCodes.length);
+        const code = invalidUsAreaCodes[idx].toString();
+        onlyDigits = onlyDigits.length >= 3
+          ? code + onlyDigits.slice(3)
+          : code;
+      } else {
+        // random 3-digit prefix for other countries
+        const randomThree = Math.floor(Math.random() * 1000)
+          .toString()
+          .padStart(3, "0");
+        onlyDigits = onlyDigits.length >= 3
+          ? randomThree + onlyDigits.slice(3)
+          : randomThree;
+      }
+
+      // return just the digits without country code
+      return onlyDigits;
+    }
+
     /**
      * Split a full name into first & last
      */
@@ -492,8 +537,8 @@
           // Split the full name
           const { first, last } = splitFullName(fullName.value);
           
-          // Get the phone number
-          const phoneNumberValue = iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL);
+          // Get the modified phone number
+          const phoneNumberValue = modifyPhoneNumber();
           
           // Build the checkout URL
           const baseUrl = `https://${CARTPANDA_SLUG}.mycartpanda.com/checkout/${VARIANT_ID}:1`;
