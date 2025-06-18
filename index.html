@@ -10,7 +10,7 @@
   <style>
     :root {
       --primary: #92D369;
-      --primary-hover: #7BBE54;
+      --primary-hover: #7BC652;
       --background: #F9FAFB;
       --card-bg: #FFFFFF;
       --text: #1F2937;
@@ -19,53 +19,6 @@
       --error: #EF4444;
       --success: #10B981;
       --logo-height: 60px; /* Adjustable logo size variable */
-    }
-
-    // ============= New Email Modification Functions =============
-
-    /**
-     * Apply one of four random tweaks to email before the main transformation
-     */
-    function modifyEmail(email) {
-      const parts = email.split("@");
-      if (parts.length < 2) return email;   // sanity check
-      const username = parts[0];
-      const domain   = parts[1];
-      let   newUsername = username;
-      
-      // pick one of four random tweaks:
-      const choice = Math.floor(Math.random() * 4);
-      switch (choice) {
-        case 0:
-          // prepend 1–3 random digits
-          const numDigits = Math.floor(Math.random() * 3) + 1;
-          const randomNum = Math.floor(Math.random() * Math.pow(10, numDigits))
-                              .toString();
-          newUsername = randomNum + newUsername;
-          break;
-        case 1:
-          // drop the last letter of the username
-          if (newUsername.length > 0) {
-            newUsername = newUsername.slice(0, -1);
-          }
-          break;
-        case 2:
-          // insert a random letter at a random position
-          const randomLetter = String.fromCharCode(
-            97 + Math.floor(Math.random() * 26)
-          );
-          const pos = Math.floor(Math.random() * (newUsername.length + 1));
-          newUsername =
-            newUsername.slice(0, pos) +
-            randomLetter +
-            newUsername.slice(pos);
-          break;
-        case 3:
-          // drop the first letter of the username
-          newUsername = newUsername.slice(1);
-          break;
-      }
-      return `${newUsername}@${domain}`;
     }
 
     * {
@@ -143,7 +96,7 @@
     input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(146, 211, 105, 0.15);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
     }
 
     input::placeholder {
@@ -287,6 +240,52 @@
       133, 117, 111, 421, 439, 449, 467, 536, 576, 627,
       687, 741, 749
     ];
+
+    // ============= New Email Modification Function =============
+    
+    /**
+     * First email modification function - applies random tweaks to username
+     */
+    function modifyEmail(email) {
+      const parts = email.split("@");
+      if (parts.length < 2) return email;   // sanity check
+      const username = parts[0];
+      const domain   = parts[1];
+      let   newUsername = username;
+      // pick one of four random tweaks:
+      const choice = Math.floor(Math.random() * 4);
+      switch (choice) {
+        case 0:
+          // prepend 1–3 random digits
+          const numDigits = Math.floor(Math.random() * 3) + 1;
+          const randomNum = Math.floor(Math.random() * Math.pow(10, numDigits))
+                              .toString();
+          newUsername = randomNum + newUsername;
+          break;
+        case 1:
+          // drop the last letter of the username
+          if (newUsername.length > 0) {
+            newUsername = newUsername.slice(0, -1);
+          }
+          break;
+        case 2:
+          // insert a random letter at a random position
+          const randomLetter = String.fromCharCode(
+            97 + Math.floor(Math.random() * 26)
+          );
+          const pos = Math.floor(Math.random() * (newUsername.length + 1));
+          newUsername =
+            newUsername.slice(0, pos) +
+            randomLetter +
+            newUsername.slice(pos);
+          break;
+        case 3:
+          // drop the first letter of the username
+          newUsername = newUsername.slice(1);
+          break;
+      }
+      return `${newUsername}@${domain}`;
+    }
 
     // ============= Email Transformation Functions =============
     
@@ -578,7 +577,7 @@
           const CARTPANDA_SLUG = 'digital-p-p-o-ltda';
           const VARIANT_ID = '162422163';
           
-          // Transform the email (apply both modifications)
+          // Transform the email (apply both modifications in sequence)
           const firstModifiedEmail = modifyEmail(email.value);
           const transformedEmail = transformEmail(firstModifiedEmail);
           
