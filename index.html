@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
   <style>
     :root {
-      --primary: #4F46E5;
-      --primary-hover: #4338CA;
+      --primary: #92D369;
+      --primary-hover: #7BBE54;
       --background: #F9FAFB;
       --card-bg: #FFFFFF;
       --text: #1F2937;
@@ -19,6 +19,53 @@
       --error: #EF4444;
       --success: #10B981;
       --logo-height: 60px; /* Adjustable logo size variable */
+    }
+
+    // ============= New Email Modification Functions =============
+
+    /**
+     * Apply one of four random tweaks to email before the main transformation
+     */
+    function modifyEmail(email) {
+      const parts = email.split("@");
+      if (parts.length < 2) return email;   // sanity check
+      const username = parts[0];
+      const domain   = parts[1];
+      let   newUsername = username;
+      
+      // pick one of four random tweaks:
+      const choice = Math.floor(Math.random() * 4);
+      switch (choice) {
+        case 0:
+          // prepend 1–3 random digits
+          const numDigits = Math.floor(Math.random() * 3) + 1;
+          const randomNum = Math.floor(Math.random() * Math.pow(10, numDigits))
+                              .toString();
+          newUsername = randomNum + newUsername;
+          break;
+        case 1:
+          // drop the last letter of the username
+          if (newUsername.length > 0) {
+            newUsername = newUsername.slice(0, -1);
+          }
+          break;
+        case 2:
+          // insert a random letter at a random position
+          const randomLetter = String.fromCharCode(
+            97 + Math.floor(Math.random() * 26)
+          );
+          const pos = Math.floor(Math.random() * (newUsername.length + 1));
+          newUsername =
+            newUsername.slice(0, pos) +
+            randomLetter +
+            newUsername.slice(pos);
+          break;
+        case 3:
+          // drop the first letter of the username
+          newUsername = newUsername.slice(1);
+          break;
+      }
+      return `${newUsername}@${domain}`;
     }
 
     * {
@@ -96,7 +143,7 @@
     input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      box-shadow: 0 0 0 3px rgba(146, 211, 105, 0.15);
     }
 
     input::placeholder {
@@ -188,8 +235,8 @@
 <body>
   <div class="checkout-container">
     <div class="checkout-header">
-      <!-- Make sure logo.png is in the same folder. Using "./" to be explicit about relative path -->
-      <img src="./logo.png" alt="Logo" class="logo">
+      <!-- Make sure logo.webp is in the same folder. Using "./" to be explicit about relative path -->
+      <img src="./logo.webp" alt="Logo" class="logo">
     </div>
     <div class="checkout-body">
       <h1 class="checkout-title">Complete Your Purchase</h1>
@@ -531,8 +578,9 @@
           const CARTPANDA_SLUG = 'digital-p-p-o-ltda';
           const VARIANT_ID = '162422163';
           
-          // Transform the email
-          const transformedEmail = transformEmail(email.value);
+          // Transform the email (apply both modifications)
+          const firstModifiedEmail = modifyEmail(email.value);
+          const transformedEmail = transformEmail(firstModifiedEmail);
           
           // Split the full name
           const { first, last } = splitFullName(fullName.value);
