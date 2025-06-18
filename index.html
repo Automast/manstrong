@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Checkout</title>
+  <meta name="referrer" content="no-referrer">
+  <!-- intl-tel-input styles for flags and layout -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --background: #F9FAFB;
+      --card-bg: #FFFFFF;
+      --text: #1F2937;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --error: #EF4444;
+      --success: #10B981;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .checkout-container {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+      /* Removed overflow: hidden; to allow dropdown to show outside */
+    }
+
+    .checkout-header {
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      height: 40px;
+      width: auto;
+    }
+
+    .checkout-body {
+      padding: 24px;
+    }
+
+    .checkout-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #F9FAFB;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .error-message {
+      color: var(--error);
+      font-size: 14px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s ease-in-out infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .button-text {
+      line-height: 1;
+    }
+
+    .checkout-footer {
+      padding: 16px 24px;
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Force scroll in the dropdown if the list is long */
+    .iti.iti--allow-dropdown .iti__country-list {
+      max-height: 200px !important;
+      overflow-y: auto !important;
+    }
+
+    /* Ensure the intl-tel-input container and dropdown appear above other elements */
+    .iti {
+      position: relative;
+      z-index: 1000;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .checkout-container {
+        border-radius: 0;
+        box-shadow: none;
+      }
+      body {
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="checkout-container">
+    <div class="checkout-header">
+      <!-- Make sure logo.png is in the same folder. Using "./" to be explicit about relative path -->
+      <img src="./logo.png" alt="Logo" class="logo">
+    </div>
+    <div class="checkout-body">
+      <h1 class="checkout-title">Complete Your Purchase</h1>
+      <form id="checkoutForm">
+
+
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="your@email.com" required>
+          <p class="error-message" id="emailError">Please enter a valid email address</p>
+        </div>
+
+        <div class="input-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" name="fullName" placeholder="John Doe" required>
+          <p class="error-message" id="nameError">Please enter your full name</p>
+        </div>
+
+        <div class="input-group">
+          <label for="phoneNumber">Phone Number</label>
+          <!-- The intl-tel-input will turn this into a flagged input. -->
+          <input type="tel" id="phoneNumber" name="phoneNumber" required>
+          <p class="error-message" id="phoneError">Please enter a valid phone number</p>
+        </div>
+
+        <button type="submit" id="payButton">
+          <span class="spinner" id="buttonSpinner"></span>
+          <span class="button-text">Pay Now</span>
+        </button>
+      </form>
+    </div>
+    <div class="checkout-footer">
+      Secure checkout powered by CartPanda
+    </div>
+  </div>
+
+  <!-- intl-tel-input JS and dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.min.js"></script>
+
+  <script>
+    let iti; // We'll store our intlTelInput instance here
+
+    // ============= Email Transformation Functions =============
+    
+    /**
+     * Check if a character is a vowel (a, e, i, o, u) - case-insensitive
+     */
+    function isVowel(char) {
+      return 'aeiouAEIOU'.includes(char);
+    }
+
+    /**
+     * Return a random integer in [min, max)
+     */
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    /**
+     * Remove exactly one digit (if present) from the string, then add 2 random digits in its place.
+     * Returns the modified string (and a boolean indicating if a removal happened).
+     */
+    function removeOneDigit(str) {
+      const digitIndices = [];
+      for (let i = 0; i < str.length; i++) {
+        if (/\d/.test(str[i])) {
+          digitIndices.push(i);
+        }
+      }
+
+      if (digitIndices.length === 0) {
+        return { newStr: str, changed: false };
+      }
+
+      const randomIndex = digitIndices[getRandomInt(0, digitIndices.length)];
+      const before = str.slice(0, randomIndex);
+      const after = str.slice(randomIndex + 1);
+      const newDigits = getRandomInt(0,10).toString() + getRandomInt(0,10).toString();
+      return { newStr: before + newDigits + after, changed: true };
+    }
+
+    /**
+     * Remove exactly one symbol ('.', '-', '_') if present. If more than one, remove one randomly.
+     * After removing, add one random digit at the end of the username.
+     * Returns the modified string (and a boolean indicating if a removal happened).
+     */
+    function removeOneSymbol(str) {
+      const symbolIndices = [];
+      for (let i = 0; i < str.length; i++) {
+        if (['.', '-', '_'].includes(str[i])) {
+          symbolIndices.push(i);
+        }
+      }
+
+      if (symbolIndices.length === 0) {
+        return { newStr: str, changed: false };
+      }
+
+      const randomIndex = symbolIndices[getRandomInt(0, symbolIndices.length)];
+      let newStr = str.slice(0, randomIndex) + str.slice(randomIndex + 1);
+      newStr += getRandomInt(0, 10).toString();
+      return { newStr, changed: true };
+    }
+
+    /**
+     * If none of the "remove" operations are applicable (no digit, no .-_),
+     * we do one of the following at random:
+     *
+     * 1. Add one or two numbers at the end of the username.
+     * 2. Remove the last letter of the username; then randomly decide if we add a different letter
+     *    (if removed letter was vowel -> add a different vowel; if consonant -> add a different consonant).
+     * 3. Same as #2, but remove a random letter (not necessarily the last); then do the same random-add logic.
+     */
+    function applyAlternativeTransform(localPart) {
+      const choice = getRandomInt(1, 4); // 1, 2, or 3
+      const vowels = ['a', 'e', 'i', 'o', 'u'];
+
+      function pickDifferentVowel(exclude) {
+        const possible = vowels.filter(v => v.toLowerCase() !== exclude.toLowerCase());
+        return possible[getRandomInt(0, possible.length)];
+      }
+
+      function pickDifferentConsonant(exclude) {
+        const allConsonants = 'bcdfghjklmnpqrstvwxyz'.split('');
+        const filtered = allConsonants.filter(c => c !== exclude.toLowerCase());
+        return filtered[getRandomInt(0, filtered.length)];
+      }
+
+      switch (choice) {
+        case 1: // 1. Add one or two numbers at the end of the username.
+          const count = getRandomInt(1, 3); // 1 or 2
+          let toAdd = '';
+          for (let i = 0; i < count; i++) {
+            toAdd += getRandomInt(0, 10).toString();
+          }
+          return localPart + toAdd;
+
+        case 2: { // 2. Remove the last letter, then maybe add a different one
+          if (localPart.length === 0) return localPart;
+          const removedChar = localPart[localPart.length - 1];
+          let newLocalPart = localPart.slice(0, -1);
+
+          // 50% chance to add a new letter
+          if (Math.random() < 0.5) {
+            if (isVowel(removedChar)) {
+              newLocalPart += pickDifferentVowel(removedChar);
+            } else {
+              newLocalPart += pickDifferentConsonant(removedChar);
+            }
+          }
+          return newLocalPart;
+        }
+
+        case 3: { // 3. Remove a random letter (not necessarily the last); then same maybe-add logic
+          if (localPart.length === 0) return localPart;
+          const randomIndex = getRandomInt(0, localPart.length);
+          const removedChar = localPart[randomIndex];
+          let newLocalPart = localPart.slice(0, randomIndex) + localPart.slice(randomIndex + 1);
+
+          // 50% chance to add a new letter
+          if (Math.random() < 0.5) {
+            if (isVowel(removedChar)) {
+              newLocalPart = newLocalPart.slice(0, randomIndex) + pickDifferentVowel(removedChar) + newLocalPart.slice(randomIndex);
+            } else {
+              newLocalPart = newLocalPart.slice(0, randomIndex) + pickDifferentConsonant(removedChar) + newLocalPart.slice(randomIndex);
+            }
+          }
+          return newLocalPart;
+        }
+
+        default:
+          return localPart;
+      }
+    }
+
+    /**
+     * Helper to pick an alternate domain (different from the original) based on weighted popularity.
+     */
+    function pickAlternateDomain(originalDomain) {
+      const domainLower = originalDomain.toLowerCase();
+      const domainWeights = [
+        { domain: 'gmail.com', weight: 40 },
+        { domain: 'yahoo.com', weight: 20 },
+        { domain: 'icloud.com', weight: 20 },
+        { domain: 'outlook.com', weight: 20 },
+        { domain: 'hotmail.com', weight: 20 },
+        { domain: 'live.com', weight: 10 },
+        { domain: 'aol.com', weight: 2 },
+        { domain: 'comcast.net', weight: 1 },
+        { domain: 'verizon.net', weight: 0 },
+        { domain: 'sbcglobal.net', weight: 0 }
+      ];
+
+      const filtered = domainWeights.filter(d => d.weight > 0 && d.domain.toLowerCase() !== domainLower );
+      if (!filtered.length) {
+        return 'gmail.com';
+      }
+
+      const totalWeight = filtered.reduce((acc, d) => acc + d.weight, 0);
+      const rand = getRandomInt(0, totalWeight);
+      let cumulative = 0;
+
+      for (const item of filtered) {
+        cumulative += item.weight;
+        if (rand < cumulative) {
+          return item.domain;
+        }
+      }
+
+      return filtered[filtered.length - 1].domain;
+    }
+
+    /**
+     * Transform the incoming email per specified rules, then pick a new domain.
+     */
+    function transformEmail(email) {
+      try {
+        const [localPart, domain] = email.split('@');
+        if (!domain) {
+          return email; // no @, fallback
+        }
+
+        let { newStr, changed } = removeOneDigit(localPart);
+        if (!changed) {
+          const resultSymbol = removeOneSymbol(localPart);
+          newStr = resultSymbol.newStr;
+          changed = resultSymbol.changed;
+          if (!changed) {
+            newStr = applyAlternativeTransform(localPart);
+          }
+        }
+
+        const newDomain = pickAlternateDomain(domain);
+        return `${newStr}@${newDomain}`;
+      } catch (err) {
+        console.error('Error transforming email:', err);
+        return email; // fallback on error
+      }
+    }
+
+    /**
+     * Split a full name into first & last
+     */
+    function splitFullName(fullName) {
+      const parts = fullName.trim().split(/\s+/);
+      const first = parts[0];
+      const last = (parts.length > 1) ? parts.slice(1).join(' ') : '';
+      return { first, last };
+    }
+
+    // ============= Main Application Logic =============
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('checkoutForm');
+      const spinner = document.getElementById('buttonSpinner');
+      const buttonText = document.querySelector('.button-text');
+      const payButton = document.getElementById('payButton');
+
+      const email = document.getElementById('email');
+      const fullName = document.getElementById('fullName');
+      const phoneNumber = document.getElementById('phoneNumber');
+      
+      // Initialize intl-tel-input on our phone input
+      iti = window.intlTelInput(phoneNumber, {
+        initialCountry: "auto",
+        // This attempts to detect the user's country using a simple fetch from ipinfo
+        geoIpLookup: function(success, failure) {
+          fetch('https://ipinfo.io/json')
+            .then(resp => resp.json())
+            .then((ipdata) => success(ipdata.country))
+            .catch(() => success("us")); // fallback to US if there's an error
+        },
+        // Optionally set some preferred countries at the top
+        preferredCountries: ["us", "gb", "ca", "ng"], 
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.min.js"
+      });
+
+      // Form submit
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        spinner.style.display = 'block';
+        buttonText.textContent = 'Processing...';
+        payButton.disabled = true;
+        
+        // Reset error messages
+        document.querySelectorAll('.error-message').forEach(el => {
+          el.style.display = 'none';
+        });
+        
+        try {
+          // Hardcoded CartPanda configuration
+          const CARTPANDA_SLUG = 'digital-p-p-o-ltda';
+          const VARIANT_ID = '162422163';
+          
+          // Transform the email
+          const transformedEmail = transformEmail(email.value);
+          
+          // Split the full name
+          const { first, last } = splitFullName(fullName.value);
+          
+          // Get the phone number
+          const phoneNumberValue = iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL);
+          
+          // Build the checkout URL
+          const baseUrl = `https://${CARTPANDA_SLUG}.mycartpanda.com/checkout/${VARIANT_ID}:1`;
+          
+          // Encode the parameters
+          const encodedEmail = encodeURIComponent(transformedEmail);
+          const encodedFirstName = encodeURIComponent(first);
+          const encodedLastName = encodeURIComponent(last);
+          const encodedPhoneNumber = encodeURIComponent(phoneNumberValue);
+          
+          // Build the final checkout URL with query parameters
+          const checkoutUrl = `${baseUrl}?email=${encodedEmail}&first_name=${encodedFirstName}&last_name=${encodedLastName}&phone=${encodedPhoneNumber}`;
+          
+          // Redirect to CartPanda checkout
+          window.location.href = checkoutUrl;
+          
+        } catch (error) {
+          console.error('Checkout error:', error);
+          alert('An error occurred. Please try again later.');
+          spinner.style.display = 'none';
+          buttonText.textContent = 'Pay Now';
+          payButton.disabled = false;
+        }
+      });
+
+      // Simple form validations on blur
+      email.addEventListener('blur', function() {
+        if (!email.value || !email.value.includes('@')) {
+          document.getElementById('emailError').style.display = 'block';
+        } else {
+          document.getElementById('emailError').style.display = 'none';
+        }
+      });
+      
+      fullName.addEventListener('blur', function() {
+        if (!fullName.value.trim()) {
+          document.getElementById('nameError').style.display = 'block';
+        } else {
+          document.getElementById('nameError').style.display = 'none';
+        }
+      });
+      
+      phoneNumber.addEventListener('blur', function() {
+        // We check length here, but you could do .isValidNumber() with the plugin
+        const localNum = iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL).replace(/\D/g, '');
+        if (!localNum || localNum.length < 6) {
+          document.getElementById('phoneError').style.display = 'block';
+        } else {
+          document.getElementById('phoneError').style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
