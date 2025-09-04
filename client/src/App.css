@@ -1,0 +1,53 @@
+.App {
+  text-align: center;
+}
+
+header {
+  background-color: var(--card-background);
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.main-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 60px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--subtle-text-color);
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-links a:hover {
+  color: var(--text-color);
+  opacity: 1;
+}
+
+/* Simple active link styling, you can enhance this with NavLink */
+.nav-links a[aria-current="page"] {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
